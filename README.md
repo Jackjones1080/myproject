@@ -1,9 +1,6 @@
-# Chaykhaneh Android
+# اپ اندروید چایخانه امام مهدی
 
-Android WebView wrapper for the Chaykhaneh website.
+این برنامه سایت آنلاین چایخانه را با WebView درون یک اپ اندرویدی نمایش می‌دهد.
+نشانی سایت: https://chaikhane.emammahdi.rezasubjack.ir/
 
-Website: https://chaikhane.emammahdi.rezasubjack.ir/
-
-Build: open this project in Android Studio, or run the GitHub Actions workflow **Build Android APK**. The APK is uploaded as an Actions artifact.
-
-The PHP/MySQL backend remains hosted on the website; this app requires internet access.
+ساخت APK با GitHub Actions انجام می‌شود. خروجی با نام Chaykhaneh-Android-APK در بخش Artifacts قرار می‌گیرد.
