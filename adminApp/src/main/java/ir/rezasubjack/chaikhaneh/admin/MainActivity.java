@@ -1,84 +1,27 @@
 package ir.rezasubjack.chaikhaneh.admin;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.CookieManager;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.content.Intent;
-import android.net.Uri;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
+import android.app.*;import android.os.*;import android.graphics.Color;import android.graphics.Typeface;import android.view.*;import android.widget.*;import org.json.*;import java.net.*;import java.io.*;import java.nio.charset.StandardCharsets;import java.util.concurrent.*;
 
 public class MainActivity extends Activity {
-    private static final String LOGIN = "https://aghreza1080sub.ir/admin/login.php";
-    private static final String HOST = "aghreza1080sub.ir";
-    private WebView webView;
-    private ProgressBar progress;
-
-    @Override public void onCreate(Bundle state) {
-        super.onCreate(state);
-        getWindow().setStatusBarColor(0xFF3E2723);
-        getWindow().setNavigationBarColor(0xFF241714);
-        FrameLayout root = new FrameLayout(this);
-        webView = new WebView(this);
-        progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        root.addView(webView, new FrameLayout.LayoutParams(-1, -1));
-        root.addView(progress, new FrameLayout.LayoutParams(-1, 6));
-        setContentView(root);
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
-        s.setLoadWithOverviewMode(true);
-        s.setUseWideViewPort(true);
-        s.setSupportZoom(false);
-        s.setAllowFileAccess(false);
-        s.setAllowContentAccess(true);
-        CookieManager cookies = CookieManager.getInstance();
-        cookies.setAcceptCookie(true);
-        cookies.setAcceptThirdPartyCookies(webView, false);
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override public void onProgressChanged(WebView v, int n) {
-                progress.setProgress(n);
-                progress.setVisibility(n >= 100 ? View.GONE : View.VISIBLE);
-            }
-        });
-        webView.setWebViewClient(new WebViewClient() {
-            @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest req) {
-                Uri u = req.getUrl();
-                String h = u.getHost() == null ? "" : u.getHost();
-                if (h.equals(HOST) || h.endsWith("." + HOST)) return false;
-                if ("https".equals(u.getScheme()) || "http".equals(u.getScheme())) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, u));
-                    return true;
-                }
-                return true;
-            }
-        });
-        if (state != null) {
-            if (webView.restoreState(state) == null) webView.loadUrl(LOGIN);
-        } else {
-            webView.loadUrl(LOGIN);
-        }
-    }
-
-    @Override protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out);
-        if (webView != null) webView.saveState(out);
-    }
-
-    @Override public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
-    }
-
-    @Override protected void onDestroy() {
-        if (webView != null) { webView.stopLoading(); webView.destroy(); }
-        super.onDestroy();
-    }
+ private static final String API="https://api.aghreza1080sub.ir/mobile/server/admin.php";
+ private final ExecutorService worker=Executors.newSingleThreadExecutor(); private final Handler handler=new Handler(Looper.getMainLooper());
+ private String cookie="",csrf=""; private LinearLayout root,content; private TextView status; private EditText password;
+ @Override public void onCreate(Bundle b){super.onCreate(b);getWindow().setStatusBarColor(Color.rgb(78,52,46));getWindow().setNavigationBarColor(Color.rgb(43,27,23));showLogin();}
+ private void base(String title){root=new LinearLayout(this);root.setOrientation(1);root.setPadding(22,22,22,22);root.setBackgroundColor(Color.rgb(250,247,242));TextView h=new TextView(this);h.setText(title);h.setTextSize(23);h.setTypeface(null,Typeface.BOLD);h.setTextColor(Color.rgb(78,52,46));h.setPadding(0,8,0,22);root.addView(h);ScrollView sc=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,4,0,20);sc.addView(content);root.addView(sc,new LinearLayout.LayoutParams(-1,0,1));status=new TextView(this);status.setTextColor(Color.DKGRAY);root.addView(status);setContentView(root);}
+ private Button btn(String text,Runnable r){Button b=new Button(this);b.setText(text);b.setAllCaps(false);b.setOnClickListener(v->r.run());content.addView(b,new LinearLayout.LayoutParams(-1,-2));return b;}
+ private TextView line(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(16);t.setTextColor(Color.rgb(55,45,40));t.setPadding(8,12,8,12);content.addView(t);return t;}
+ private void showLogin(){base("مدیریت چایخانه");line("برای ورود، رمز مدیریت سایت را وارد کنید.");password=new EditText(this);password.setHint("رمز مدیریت");password.setInputType(129);content.addView(password);btn("ورود به پنل",()->login());line("ارتباط امن با سرور چایخانه");}
+ private void login(){String p=password.getText().toString();if(p.isEmpty()){status.setText("رمز را وارد کنید.");return;}status.setText("در حال اتصال...");post("login",json("password",p),false,res->{if(res.optBoolean("ok")){csrf=res.optString("csrf");showDashboard();}else status.setText(res.optString("error","ورود ناموفق"));});}
+ private void showDashboard(){base("پنل مدیریت چایخانه");btn("نمای کلی و آمار",()->dashboard());btn("ثبت‌نام اعضا",()->loadList("registrations","فهرست اعضا"));btn("مراسم‌ها",()->loadList("ceremonies","مدیریت مراسم‌ها"));btn("پیام‌ها و چالش‌ها",()->loadList("challenges","چالش‌ها و پیام‌ها"));btn("کمک‌های غیرنقدی",()->loadList("donations","کمک‌های غیرنقدی"));btn("خروج از حساب",()->post("logout",new JSONObject(),true,res->{cookie="";csrf="";showLogin();}));dashboard();}
+ private void dashboard(){get("dashboard",res->{content.removeAllViews();if(!res.optBoolean("ok")){line(res.optString("error","دریافت آمار ناموفق بود."));btn("بازگشت",()->showDashboard());return;}line("آمار سامانه");JSONObject d=res.optJSONObject("data");if(d==null){line("اطلاعات دریافت نشد.");return;}line("ثبت‌نام‌های در انتظار: "+d.optInt("registrations_pending"));line("اعضای فعال: "+d.optInt("registrations_active"));line("مراسم‌ها: "+d.optInt("ceremonies"));line("چالش‌های بررسی‌نشده: "+d.optInt("challenges_pending"));line("کمک‌های جدید: "+d.optInt("donations_new"));btn("ثبت‌نام اعضا",()->loadList("registrations","فهرست اعضا"));btn("مراسم‌ها",()->loadList("ceremonies","مدیریت مراسم‌ها"));btn("چالش‌ها",()->loadList("challenges","چالش‌ها"));btn("کمک‌های غیرنقدی",()->loadList("donations","کمک‌ها"));btn("خروج",()->post("logout",new JSONObject(),true,x->{cookie="";csrf="";showLogin();}));});}
+ private void loadList(String action,String title){get(action,res->{content.removeAllViews();line(title);if(!res.optBoolean("ok")){line(res.optString("error","دریافت اطلاعات ناموفق بود."));btn("بازگشت به داشبورد",()->showDashboard());return;}if("ceremonies".equals(action))btn("افزودن مراسم",()->editCeremony(null));JSONArray a=res.optJSONArray("data");if(a==null||a.length()==0){line("موردی ثبت نشده است.");btn("بازگشت به داشبورد",()->showDashboard());return;}for(int i=0;i<a.length();i++){JSONObject o=a.optJSONObject(i);if(o==null)continue;final JSONObject item=o;int id=o.optInt("id");String label;if("registrations".equals(action)){label=o.optString("first_name")+" "+o.optString("last_name")+" | "+o.optString("phone")+" | "+o.optString("status");}else if("ceremonies".equals(action)){label=o.optString("title")+" | "+o.optString("event_date")+" | "+(o.optInt("is_published")==1?"منتشرشده":"پیش‌نویس");}else if("challenges".equals(action)){label=o.optString("sender_name")+" | "+o.optString("body")+" | "+o.optString("status");}else{label=o.optString("contact_name")+" | "+o.optString("description")+" | "+o.optString("status");}
+ btn(label,()->{if("registrations".equals(action))choose("وضعیت عضو",new String[]{"در انتظار","فعال","تعلیق","رد"},new String[]{"pending","active","suspended","rejected"},v->mutate("registration_update",json("id",id,"status",v,"role",item.optString("role","member")),()->loadList(action,title)));else if("ceremonies".equals(action))new AlertDialog.Builder(this).setTitle(item.optString("title")).setItems(new String[]{"ویرایش","حذف"},(dg,w)->{if(w==0)editCeremony(item);else new AlertDialog.Builder(this).setMessage("این مراسم حذف شود؟").setPositiveButton("حذف",(x,y)->mutate("ceremony_delete",json("id",id),()->loadList(action,title))).setNegativeButton("انصراف",null).show();}).show();else if("challenges".equals(action))choose("وضعیت پیام",new String[]{"در انتظار","تأیید","رد"},new String[]{"pending","approved","rejected"},v->mutate("challenge_update",json("id",id,"status",v),()->loadList(action,title)));else choose("وضعیت کمک",new String[]{"جدید","پیگیری شد","انجام شد"},new String[]{"new","contacted","done"},v->mutate("donation_update",json("id",id,"status",v),()->loadList(action,title)));});}
+ btn("بازگشت به داشبورد",()->showDashboard());});}
+ private interface Pick{void selected(String value);} private void choose(String title,String[] labels,String[] values,Pick p){new AlertDialog.Builder(this).setTitle(title).setItems(labels,(d,w)->p.selected(values[w])).setNegativeButton("انصراف",null).show();}
+ private void editCeremony(JSONObject old){LinearLayout box=new LinearLayout(this);box.setPadding(20,8,20,8);box.setOrientation(1);EditText t=new EditText(this);t.setHint("عنوان مراسم");EditText desc=new EditText(this);desc.setHint("توضیحات");EditText date=new EditText(this);date.setHint("تاریخ مراسم");if(old!=null){t.setText(old.optString("title"));desc.setText(old.optString("description"));date.setText(old.optString("event_date"));}box.addView(t);box.addView(desc);box.addView(date);new AlertDialog.Builder(this).setTitle("ثبت مراسم").setView(box).setPositiveButton("ذخیره",(d,w)->mutate("ceremony_save",json("id",old==null?0:old.optInt("id"),"title",t.getText().toString(),"description",desc.getText().toString(),"event_date",date.getText().toString(),"is_published",true),()->loadList("ceremonies","مدیریت مراسم‌ها"))).setNegativeButton("انصراف",null).show();}
+ private void mutate(String action,JSONObject data,Runnable done){post(action,data,true,res->{status.setText(res.optString("message",res.optString("error","انجام شد")));if(res.optBoolean("ok"))done.run();});}
+ private JSONObject json(Object... kv){JSONObject o=new JSONObject();try{for(int i=0;i+1<kv.length;i+=2)o.put(String.valueOf(kv[i]),kv[i+1]);}catch(Exception ignored){}return o;}
+ private void get(String action,java.util.function.Consumer<JSONObject> cb){request(action,null,false,cb);}private void post(String action,JSONObject data,boolean auth,java.util.function.Consumer<JSONObject> cb){request(action,data,auth,cb);}
+ private void request(String action,JSONObject data,boolean auth,java.util.function.Consumer<JSONObject> cb){status.setText("در حال دریافت اطلاعات...");worker.execute(()->{JSONObject result;try{URL u=new URL(API+"?action="+URLEncoder.encode(action,"UTF-8"));HttpURLConnection c=(HttpURLConnection)u.openConnection();c.setConnectTimeout(15000);c.setReadTimeout(20000);c.setRequestMethod(data==null?"GET":"POST");c.setRequestProperty("Accept","application/json");if(!cookie.isEmpty())c.setRequestProperty("Cookie",cookie);if(data!=null){c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json; charset=utf-8");if(auth&&!csrf.isEmpty())c.setRequestProperty("X-CSRF-Token",csrf);try(OutputStream os=c.getOutputStream()){os.write(data.toString().getBytes(StandardCharsets.UTF_8));}}String sc=c.getHeaderField("Set-Cookie");if(sc!=null){String pair=sc.split(";",2)[0];if(pair.startsWith("PHPSESSID="))cookie=pair;}InputStream is=(c.getResponseCode()<400)?c.getInputStream():c.getErrorStream();ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[4096];int n;while((n=is.read(buf))>0)out.write(buf,0,n);result=new JSONObject(out.toString("UTF-8"));c.disconnect();}catch(Exception e){result=json("ok",false,"error","اتصال به سرور برقرار نشد. مسیر API و اتصال اینترنت را بررسی کنید.");}JSONObject finalResult=result;handler.post(()->cb.accept(finalResult));});}
+ @Override protected void onDestroy(){super.onDestroy();worker.shutdownNow();}
 }
