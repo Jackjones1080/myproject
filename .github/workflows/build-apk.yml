@@ -17,6 +17,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Prepare launcher icon
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          base64 -d app/src/main/assets/chaikhaneh_icon.jpg.b64 > app/src/main/res/drawable-nodpi/chaikhaneh_icon.jpg
       - name: Build debug APK
         run: gradle assembleDebug
       - name: Upload APK

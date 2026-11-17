@@ -15,7 +15,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
 public class MainActivity extends Activity {
-    private static final String HOME = "https://chaikhane.emammahdi.rezasubjack.ir/";
+    private static final String HOME = "https://aghreza1080sub.ir/";
     private WebView webView;
     private ProgressBar progress;
     @Override public void onCreate(Bundle state) {
@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest req) {
                 Uri u = req.getUrl(); String h = u.getHost() == null ? "" : u.getHost();
-                if (h.equals("chaikhane.emammahdi.rezasubjack.ir")) return false;
+                if (h.equals("aghreza1080sub.ir") || h.endsWith(".aghreza1080sub.ir")) return false;
                 if ("https".equals(u.getScheme()) || "http".equals(u.getScheme())) { startActivity(new Intent(Intent.ACTION_VIEW, u)); return true; }
                 return true;
             }
