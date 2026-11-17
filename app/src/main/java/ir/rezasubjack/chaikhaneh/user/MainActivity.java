@@ -5,6 +5,8 @@ import android.os.*;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.view.*;
+import android.view.Gravity;
+import android.graphics.drawable.GradientDrawable;
 import android.widget.*;
 import org.json.*;
 import java.net.*;
@@ -17,18 +19,24 @@ public class MainActivity extends Activity {
  private static final String REGISTER="https://api.aghreza1080sub.ir/api/register.php";
  private final ExecutorService io=Executors.newSingleThreadExecutor();
  private LinearLayout root,body;
- private int brown=Color.rgb(91,55,38),cream=Color.rgb(250,247,241);
- @Override public void onCreate(Bundle b){super.onCreate(b);getWindow().setStatusBarColor(brown);getWindow().setNavigationBarColor(Color.rgb(55,34,25));home();}
+ private int brand=Color.rgb(11,95,90),brand2=Color.rgb(26,122,114),gold=Color.rgb(201,168,76),cream=Color.rgb(244,239,230),ink=Color.rgb(28,25,21),muted=Color.rgb(107,100,92);
+ private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(radius);return d;}
+ private GradientDrawable gradient(int a,int b,int radius){GradientDrawable d=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{a,b});d.setCornerRadius(radius);return d;}
+ @Override public void onCreate(Bundle b){super.onCreate(b);getWindow().setStatusBarColor(brand);getWindow().setNavigationBarColor(brand);home();}
  private void shell(String title){
-  root=new LinearLayout(this);root.setOrientation(1);root.setBackgroundColor(cream);
-  TextView head=new TextView(this);head.setText(title);head.setTextSize(23);head.setTypeface(null,Typeface.BOLD);head.setTextColor(Color.WHITE);head.setBackgroundColor(brown);head.setPadding(22,22,22,22);root.addView(head);
-  LinearLayout nav=new LinearLayout(this);nav.setBackgroundColor(Color.WHITE);
+  root=new LinearLayout(this);root.setOrientation(1);root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);root.setBackgroundColor(cream);
+  LinearLayout hero=new LinearLayout(this);hero.setOrientation(1);hero.setPadding(22,20,22,20);hero.setBackground(gradient(brand,brand2,0));hero.setGravity(Gravity.CENTER_VERTICAL);
+  TextView eyebrow=new TextView(this);eyebrow.setText("چایخانه امام مهدی (عج)");eyebrow.setTextSize(12);eyebrow.setTextColor(Color.rgb(232,221,190));hero.addView(eyebrow);
+  TextView head=new TextView(this);head.setText(title);head.setTextSize(22);head.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));head.setTextColor(Color.WHITE);head.setPadding(0,5,0,2);hero.addView(head);
+  TextView sub=new TextView(this);sub.setText("به یاد امام زمان (عج)");sub.setTextSize(12);sub.setTextColor(Color.WHITE);hero.addView(sub);root.addView(hero);
+  ScrollView sc=new ScrollView(this);body=new LinearLayout(this);body.setOrientation(1);body.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);body.setPadding(18,18,18,24);sc.addView(body);root.addView(sc,new LinearLayout.LayoutParams(-1,0,1));
+  LinearLayout nav=new LinearLayout(this);nav.setPadding(6,7,6,7);nav.setBackgroundColor(Color.WHITE);nav.setElevation(10);
   String[][] items={{"خانه","home"},{"مراسم","ceremonies"},{"گالری","gallery"},{"چالش‌ها","challenges"},{"ثبت‌نام","register"}};
-  for(String[] it:items){Button b=new Button(this);b.setText(it[0]);b.setTextSize(11);b.setAllCaps(false);b.setOnClickListener(v->{switch(it[1]){case "home":home();break;case "ceremonies":ceremonies();break;case "gallery":gallery();break;case "challenges":challenges();break;case "register":register();}});nav.addView(b,new LinearLayout.LayoutParams(0,-2,1));}
-  root.addView(nav);ScrollView sc=new ScrollView(this);body=new LinearLayout(this);body.setPadding(18,16,18,28);body.setOrientation(1);sc.addView(body);root.addView(sc,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
+  for(String[] it:items){Button b=new Button(this);b.setText(it[0]);b.setTextSize(10);b.setTextColor(brand);b.setAllCaps(false);b.setMinHeight(46);b.setPadding(2,2,2,2);b.setBackground(shape(Color.WHITE,22));b.setOnClickListener(v->{switch(it[1]){case "home":home();break;case "ceremonies":ceremonies();break;case "gallery":gallery();break;case "challenges":challenges();break;case "register":register();break;}});nav.addView(b,new LinearLayout.LayoutParams(0,-2,1));}
+  root.addView(nav);setContentView(root);
  }
- private TextView text(String s,int size,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(Color.rgb(55,45,38));t.setPadding(4,10,4,10);if(bold)t.setTypeface(null,Typeface.BOLD);body.addView(t);return t;}
- private void card(String title,String desc){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(16,10,16,12);c.setBackgroundColor(Color.WHITE);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=14;body.addView(c,lp);TextView a=new TextView(this);a.setText(title);a.setTextSize(18);a.setTypeface(null,Typeface.BOLD);a.setTextColor(brown);c.addView(a);TextView d=new TextView(this);d.setText(desc);d.setTextSize(14);d.setTextColor(Color.DKGRAY);d.setPadding(0,8,0,4);c.addView(d);}
+ private TextView text(String s,int size,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(ink);t.setGravity(Gravity.RIGHT);t.setPadding(4,10,4,10);if(bold)t.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));body.addView(t);return t;}
+ private void card(String title,String desc){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(17,14,17,15);c.setBackground(shape(Color.WHITE,24));c.setElevation(2);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=14;body.addView(c,lp);TextView a=new TextView(this);a.setText(title);a.setTextSize(17);a.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));a.setTextColor(brand);c.addView(a);View line=new View(this);line.setBackground(shape(gold,8));LinearLayout.LayoutParams lineLp=new LinearLayout.LayoutParams(44,3);lineLp.topMargin=5;c.addView(line,lineLp);TextView d=new TextView(this);d.setText(desc);d.setTextSize(14);d.setTextColor(muted);d.setGravity(Gravity.RIGHT);d.setPadding(0,9,0,2);c.addView(d);}
  private void loading(String title){shell(title);text("در حال دریافت اطلاعات از سرور…",15,false);}
  private interface JsonDone { void accept(JSONObject value); }
  private void get(String action, JsonDone done){
