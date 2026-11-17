@@ -1,0 +1,46 @@
+package ir.rezasubjack.chaikhaneh.user;
+
+import android.app.*;
+import android.os.*;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.view.*;
+import android.widget.*;
+import org.json.*;
+import java.net.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.*;
+
+public class MainActivity extends Activity {
+ private static final String API="https://api.aghreza1080sub.ir/mobile/public.php";
+ private static final String REGISTER="https://api.aghreza1080sub.ir/api/register.php";
+ private final ExecutorService io=Executors.newSingleThreadExecutor();
+ private LinearLayout root,body;
+ private int brown=Color.rgb(91,55,38),cream=Color.rgb(250,247,241);
+ @Override public void onCreate(Bundle b){super.onCreate(b);getWindow().setStatusBarColor(brown);getWindow().setNavigationBarColor(Color.rgb(55,34,25));home();}
+ private void shell(String title){
+  root=new LinearLayout(this);root.setOrientation(1);root.setBackgroundColor(cream);
+  TextView head=new TextView(this);head.setText(title);head.setTextSize(23);head.setTypeface(null,Typeface.BOLD);head.setTextColor(Color.WHITE);head.setBackgroundColor(brown);head.setPadding(22,22,22,22);root.addView(head);
+  LinearLayout nav=new LinearLayout(this);nav.setBackgroundColor(Color.WHITE);
+  String[][] items={{"خانه","home"},{"مراسم","ceremonies"},{"گالری","gallery"},{"چالش‌ها","challenges"},{"ثبت‌نام","register"}};
+  for(String[] it:items){Button b=new Button(this);b.setText(it[0]);b.setTextSize(11);b.setAllCaps(false);b.setOnClickListener(v->{switch(it[1]){case "home":home();break;case "ceremonies":ceremonies();break;case "gallery":gallery();break;case "challenges":challenges();break;case "register":register();}});nav.addView(b,new LinearLayout.LayoutParams(0,-2,1));}
+  root.addView(nav);ScrollView sc=new ScrollView(this);body=new LinearLayout(this);body.setPadding(18,16,18,28);body.setOrientation(1);sc.addView(body);root.addView(sc,new LinearLayout.LayoutParams(-1,0,1));setContentView(root);
+ }
+ private TextView text(String s,int size,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(Color.rgb(55,45,38));t.setPadding(4,10,4,10);if(bold)t.setTypeface(null,Typeface.BOLD);body.addView(t);return t;}
+ private void card(String title,String desc){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(16,10,16,12);c.setBackgroundColor(Color.WHITE);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.bottomMargin=14;body.addView(c,lp);TextView a=new TextView(this);a.setText(title);a.setTextSize(18);a.setTypeface(null,Typeface.BOLD);a.setTextColor(brown);c.addView(a);TextView d=new TextView(this);d.setText(desc);d.setTextSize(14);d.setTextColor(Color.DKGRAY);d.setPadding(0,8,0,4);c.addView(d);}
+ private void loading(String title){shell(title);text("در حال دریافت اطلاعات از سرور…",15,false);}
+ private interface JsonDone { void accept(JSONObject value); }
+ private void get(String action, JsonDone done){
+  io.execute(()->{JSONObject result;try{URL u=new URL(API+"?action="+URLEncoder.encode(action,"UTF-8"));HttpURLConnection c=(HttpURLConnection)u.openConnection();c.setConnectTimeout(15000);c.setReadTimeout(15000);c.setRequestMethod("GET");InputStream in=(c.getResponseCode()<400?c.getInputStream():c.getErrorStream());ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[4096];int n;while((n=in.read(buf))>0)out.write(buf,0,n);result=new JSONObject(out.toString("UTF-8"));c.disconnect();}catch(Exception e){result=new JSONObject();try{result.put("error","اتصال به سرور برقرار نشد. اینترنت را بررسی و دوباره تلاش کنید.");}catch(Exception ignored){}}JSONObject r=result;runOnUiThread(()->done.accept(r));});
+ }
+ private void home(){loading("چایخانه امام مهدی (عج)");get("home",r->{body.removeAllViews();if(!r.optBoolean("ok")){text(r.optString("error","خطا"),15,false);return;}JSONObject d=r.optJSONObject("data"),s=d==null?null:d.optJSONObject("settings");if(s!=null){text(s.optString("welcomeTitle",s.optString("title","خوش آمدید")),23,true);text(s.optString("welcomeText",""),16,false);text(s.optString("aboutText",""),15,false);if(!s.optString("address").isEmpty())card("نشانی",s.optString("address"));if(!s.optString("phone").isEmpty())card("راه ارتباطی",s.optString("phone"));}JSONArray slides=d==null?null:d.optJSONArray("slides");if(slides!=null&&slides.length()>0){JSONObject x=slides.optJSONObject(0);if(x!=null)card("تصویر معرفی",x.optString("url"));}text("دسترسی سریع",18,true);card("مراسم‌ها","برنامه‌ها و مراسم‌های منتشرشده چایخانه را ببینید.");card("ثبت‌نام","برای حضور و همکاری، فرم ثبت‌نام را تکمیل کنید.");});}
+ private void ceremonies(){loading("مراسم‌ها");get("ceremonies",r->{body.removeAllViews();JSONArray a=r.optJSONArray("data");if(a==null||a.length()==0){text("فعلاً مراسمی منتشر نشده است.",16,false);return;}for(int i=0;i<a.length();i++){JSONObject x=a.optJSONObject(i);if(x!=null)card(x.optString("title"),x.optString("event_date")+"\n"+x.optString("description"));}});}
+ private void gallery(){loading("گالری تصاویر");get("gallery",r->{body.removeAllViews();JSONArray a=r.optJSONArray("data");if(a==null||a.length()==0){text("تصویری ثبت نشده است.",16,false);return;}for(int i=0;i<a.length();i++){JSONObject x=a.optJSONObject(i);if(x!=null)card(x.optString("title","تصویر"),x.optString("url"));}});}
+ private void challenges(){loading("چالش‌های تأییدشده");get("challenges",r->{body.removeAllViews();JSONArray a=r.optJSONArray("data");if(a==null||a.length()==0){text("موردی برای نمایش وجود ندارد.",16,false);return;}for(int i=0;i<a.length();i++){JSONObject x=a.optJSONObject(i);if(x!=null)card(x.optString("name",""),x.optString("body")+(x.optString("image_url").isEmpty()?"":"\n"+x.optString("image_url")));}});}
+ private EditText field(String hint,int type){EditText e=new EditText(this);e.setHint(hint);e.setInputType(type);body.addView(e);return e;}
+ private Spinner choices(String hint,String[] labels){text(hint,14,true);Spinner sp=new Spinner(this);ArrayAdapter<String> ad=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels);sp.setAdapter(ad);body.addView(sp);return sp;}
+ private void register(){shell("ثبت‌نام در چایخانه");text("فرم ثبت‌نام",21,true);text("اطلاعات را دقیق وارد کنید؛ برای ثبت‌نام نیازی به ساخت حساب نیست.",14,false);EditText first=field("نام",1),last=field("نام خانوادگی",1),phone=field("شماره تماس",3),nid=field("کد ملی (۱۰ رقم)",2),birth=field("تاریخ تولد شمسی (مثلاً ۱۳۸۵/۰۵/۱۲)",1),education=field("تحصیلات",1),job=field("شغل (اختیاری)",1),note=field("زمینه همکاری یا توضیحات (اختیاری)",1);Spinner gender=choices("جنسیت",new String[]{"برادر","خواهر"}),marital=choices("وضعیت تأهل",new String[]{"مجرد","متأهل"}),attendance=choices("نحوه حضور",new String[]{"مناسبت‌ها","هفتگی","دو هفته یک‌بار"});Button send=new Button(this);send.setText("ارسال درخواست ثبت‌نام");send.setOnClickListener(v->{String f=first.getText().toString().trim(),l=last.getText().toString().trim(),p=phone.getText().toString().trim(),n=nid.getText().toString().trim(),bd=birth.getText().toString().trim(),ed=education.getText().toString().trim();if(f.length()<2||l.length()<2||p.isEmpty()||n.length()!=10||bd.isEmpty()||ed.isEmpty()){new AlertDialog.Builder(this).setMessage("لطفاً نام، نام خانوادگی، تلفن، کد ملی ۱۰ رقمی، تاریخ تولد و تحصیلات را کامل کنید.").setPositiveButton("باشه",null).show();return;}try{JSONObject j=new JSONObject();j.put("first_name",f);j.put("last_name",l);j.put("phone",p);j.put("national_id",n);j.put("gender",gender.getSelectedItemPosition()==0?"brother":"sister");j.put("education",ed);j.put("birth_date_jalali",bd);j.put("job",job.getText().toString());j.put("marital_status",marital.getSelectedItemPosition()==0?"single":"married");int a=attendance.getSelectedItemPosition();j.put("attendance",a==0?"occasions":(a==1?"weekly":"biweekly"));j.put("cooperation_note",note.getText().toString());j.put("skills",new JSONArray());postRegister(j,send);}catch(Exception e){new AlertDialog.Builder(this).setMessage("ساخت درخواست ثبت‌نام انجام نشد.").setPositiveButton("باشه",null).show();}});body.addView(send);}
+ private void postRegister(JSONObject j,Button b){b.setEnabled(false);io.execute(()->{String msg;try{HttpURLConnection c=(HttpURLConnection)new URL(REGISTER).openConnection();c.setRequestMethod("POST");c.setDoOutput(true);c.setConnectTimeout(15000);c.setReadTimeout(15000);c.setRequestProperty("Accept","application/json");c.setRequestProperty("Content-Type","application/json; charset=utf-8");try(OutputStream os=c.getOutputStream()){os.write(j.toString().getBytes(StandardCharsets.UTF_8));}int code=c.getResponseCode();InputStream in=code<400?c.getInputStream():c.getErrorStream();ByteArrayOutputStream o=new ByteArrayOutputStream();byte[] z=new byte[2048];int n;while((n=in.read(z))>0)o.write(z,0,n);JSONObject r=new JSONObject(o.toString("UTF-8"));msg=r.optBoolean("ok")?"درخواست ثبت‌نام شما ارسال شد.":r.optString("error","ثبت‌نام انجام نشد.");c.disconnect();}catch(Exception e){msg="ارتباط با سرور برقرار نشد. نشانی API ثبت‌نام را بررسی کنید.";}String m=msg;runOnUiThread(()->{b.setEnabled(true);new AlertDialog.Builder(this).setMessage(m).setPositiveButton("باشه",null).show();});});}
+ @Override public void onDestroy(){super.onDestroy();io.shutdownNow();}
+}
